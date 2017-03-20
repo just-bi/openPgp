@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="./assets/styles/style-generate_keys.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="js/openpgp.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      // DOM elements
+      var $body = $("body");
+      var $txtUserIds = $("#txtUserIds");
+      var $txtRSAKeySize = $("#txtRSAKeySize");
+      var $txtPassPhrase = $("#txtPassPhrase");
+      var $txtPrivate = $("#txtPrivate");
+      var $txtPublic = $("#txtPublic");
+      var $btnGenerate = $("#btnGenerate");
+      var $btnDownloadPrivate = $("#btnDownloadPrivate");
+      var $btnDownloadPublic = $("#btnDownloadPublic");
+
+
+      // populate the elements with default values
+      setDefaultValues([{
+        elem: $txtUserIds,
+        value: '[{"name":"abc","email":"abc@def.com"}]'
+      }, {
+        elem: $txtRSAKeySize,
+        value: 4096
+      }, {
+        elem: $txtPassPhrase,
+        value: '"super long and hard to guess secret"'
+      }]);
+
+
+      addEventListeners();
+
+
+      function setDefaultValues(defaultValues) {
+        for (var i = 0; i < defaultValues.length; i++) {
+          defaultValues[i].elem.val(defaultValues[i].value)
+        }
+      }
+
+
+      function getValues() {
+        return {
+          userIds: $txtUserIds.val(),
+          rsaKeySize: $txtRSAKeySize.val(),
+          passPhrase: $txtPassPhrase.val()
+        }
+      }
+
+      function checkPrerequisites(data) {
+
+        // values may not be empty
+        if (data.userIds.trim() === ""
+                || data.rsaKeySize.trim() === ""
+                || data.passPhrase.trim() === "") {
+          return false;
+        }
+
+        // the userIds must be entered as JSON
+        try {
+          JSON.parse(data.userIds)
+        } catch (err) {
+          return false;
+        }
+
+        // the provided RSA key size must be numeric
+        return !(isNaN(parseInt(data.rsaKeySize)))
+      }
+
+
+      function addEventListeners() {
+        $btnDownloadPrivate.on("click", downloadPrivateKey);
+        $btnDownloadPublic.on("click", downloadPublicKey);
+        $btnGenerate.on("click", generateKeys);
+      }
+
+
+      function downloadPrivateKey() {
+        var dataString = $txtPrivate.data("keyValue");
+        if (dataString !== "") {
+          download("privateKey.txt", dataString.replace(/\r/, ""));
+        } else {
+          alert("No key generated yet.");
+        }
+      }
+
+      function downloadPublicKey() {
+        var dataString = $txtPublic.data("keyValue");
+        if (dataString !== "") {
+          download("publicKey.txt", dataString.replace(/\r/, ""));
+        } else {
+          alert("No key generated yet.");
+        }
+      }
+
+
+      function generateKeys() {
+        var data = getValues();
+        if (!checkPrerequisites(data)) {
+          alert("Invalid input parameters.");
+          return;
+        }
+
+        // show the loading bar
+        showLoadingBar();
+
+        // setup
+        openpgp.initWorker({path: 'js/openpgp.worker.js'});
+        openpgp.config.aead_protect = true;
+
+
+        // creation of the keys
+        openpgp.generateKey({
+          userIds: JSON.parse(data.userIds),     // multiple user IDs
+          numBits: parseInt(data.rsaKeySize),    // RSA key size
+          passphrase: data.passPhrase            // protects the private key
+        }).then(function (key) {
+          $txtPrivate.val(key.privateKeyArmored);
+          $txtPrivate.data("keyValue", key.privateKeyArmored);
+
+          $txtPublic.val(key.publicKeyArmored);
+          $txtPublic.data("keyValue", key.publicKeyArmored);
+          removeLoadingBar();
+        })
+      }
+
+
+      function showLoadingBar() {
+        $body.append("<div id='loading' style='line-height:30px;position:fixed;bottom:0;height:30px;left:0;right:0;background-color:black;text-align:center;color:white;'>Generating keys, please be patient...</div>");
+      }
+
+      function removeLoadingBar() {
+        $("#loading").remove();
+      }
+
+
+      function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+      }
+
+
+    });
+  </script>
+</head>
+<body>
+
+<div class="app">
+  <h1>Generation of public and private PGP keys</h1>
+  <div class="input">
+    <div>
+      <span>INPUT</span>
+    </div>
+    <div class="input_parameters">
+      <div class="input_parameter">
+        <div class="input_parameter_name">Multiple User Ids</div>
+        <div class="input_parameter_value"><input type="text" id="txtUserIds"/></div>
+      </div>
+      <div class="input_parameter">
+        <div class="input_parameter_name">RSA Key Size</div>
+        <div class="input_parameter_value"><input type="text" id="txtRSAKeySize"/></div>
+      </div>
+      <div class="input_parameter">
+        <div class="input_parameter_name">Passphrase</div>
+        <div class="input_parameter_value"><input type="text" id="txtPassPhrase"/></div>
+      </div>
+    </div>
+    <div class="input_button">
+      <button type="button" id="btnGenerate">Generate Keys</button>
+    </div>
+  </div>
+
+  <div class="output">
+    <div>
+      <span>OUTPUT</span>
+    </div>
+    <div class="output_key">
+      <div>
+        <span>Private Key</span>
+      </div>
+      <div>
+        <textarea readonly id="txtPrivate" class="output_key_text"></textarea>
+      </div>
+      <div>
+        <button type="button" id="btnDownloadPrivate">Download</button>
+      </div>
+    </div>
+
+    <div class="output_key">
+      <div>
+        <span>Public Key</span>
+      </div>
+      <div>
+        <textarea readonly id="txtPublic" class="output_key_text"></textarea>
+      </div>
+      <div>
+        <button type="button" id="btnDownloadPublic">Download</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

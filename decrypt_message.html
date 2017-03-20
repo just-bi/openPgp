@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="./assets/styles/style-decrypt_message.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="js/openpgp.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      // DOM elements
+      var $txtPrivateKey = $("#txtPrivateKey");
+      var $txtEncryptedMessage = $("#txtEncryptedMessage");
+      var $txtPassphrase = $("#txtPassphrase");
+      var $txtMessage = $("#txtMessage");
+
+      var $btnDecryptMessage = $("#btnDecryptMessage");
+
+
+      addEventListeners();
+
+
+      function addEventListeners() {
+        $btnDecryptMessage.on("click", decryptMessage);
+      }
+
+
+      function getValues() {
+        return {
+          privateKey: $txtPrivateKey.val(),
+          encryptedMessage: $txtEncryptedMessage.val(),
+          passphrase: $txtPassphrase.val()
+        }
+      }
+
+
+      function decryptMessage() {
+        var data = getValues();
+
+        var privKeys = openpgp.key.readArmored(data.privateKey);
+        var privKey = privKeys.keys[0];
+
+        // decrypt via the super secret passphrase
+        privKey.decrypt(data.passphrase);
+
+        // decrypt the message
+        openpgp.decrypt({
+          message: openpgp.message.readArmored(data.encryptedMessage),
+          privateKey: privKey     // for decryption
+        }).then(function(plaintext) {
+          $txtMessage.val(plaintext.data);
+        });
+      }
+
+    });
+  </script>
+</head>
+<body style="font-family: monospace;">
+<div class="app">
+  <h1>Decrypt message</h1>
+  <div class="input">
+    <div>
+      <span>INPUT</span>
+    </div>
+    <div class="input_parameters">
+      <div class="input_parameter">
+        <div class="input_parameter_name">
+          <span>Passphrase</span>
+        </div>
+        <div class="input_parameter_value">
+          <input type="text" id="txtPassphrase"></input>
+        </div>
+      </div>
+      <div class="input_parameter">
+        <div class="input_parameter_name">
+          <span>Private key</span>
+        </div>
+        <div class="input_parameter_value">
+          <textarea id="txtPrivateKey" class="input_parameter_text"></textarea>
+        </div>
+      </div>
+      <div class="input_parameter">
+        <div class="input_parameter_name">
+          <span>Encrypted Message</span>
+        </div>
+        <div class="input_parameter_value">
+          <textarea id="txtEncryptedMessage" class="input_parameter_text"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="input_button">
+      <button type="button" id="btnDecryptMessage">Decrypt Message</button>
+    </div>
+  </div>
+
+  <div class="output">
+    <div>
+      <span>OUTPUT</span>
+    </div>
+    <div class="output_key">
+      <div>
+        <span>Plain Text Message</span>
+      </div>
+      <div>
+        <textarea readonly id="txtMessage" class="output_key_text"></textarea>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

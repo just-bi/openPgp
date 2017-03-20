@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="./assets/styles/style-encrypt_message.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="js/openpgp.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      // DOM elements
+      var $txtPublicKey = $("#txtPublicKey");
+      var $txtMessage = $("#txtMessage");
+      var $txtEncryptedMessage = $("#txtEncryptedMessage");
+      var $btnEncryptMessage = $("#btnEncryptMessage");
+      var $btnDownloadEncryptedMessage = $("#btnDownloadEncryptedMessage");
+
+
+      addEventListeners();
+
+
+      function addEventListeners() {
+        $btnEncryptMessage.on("click", encryptMessage);
+        $btnDownloadEncryptedMessage.on("click", downloadEncryptedMessage);
+      }
+
+
+      function getValues() {
+        return {
+          publicKey: $txtPublicKey.val(),
+          plainMessage: $txtMessage.val()
+        }
+      }
+
+
+      function encryptMessage() {
+        var data = getValues();
+        openpgp.encrypt({
+          data: data.plainMessage,
+          publicKeys: openpgp.key.readArmored(data.publicKey).keys
+        }).then(function(ciphertext) {
+          $txtEncryptedMessage.val(ciphertext.data);
+          $txtEncryptedMessage.data("encryptedText", ciphertext.data);
+        });
+      }
+
+
+      function downloadEncryptedMessage() {
+        var dataString = $txtEncryptedMessage.data("encryptedText");
+        if (dataString !== "") {
+          download("encryptedMessage.txt", dataString);
+        } else {
+          alert("No key generated yet.");
+        }
+      }
+
+
+
+
+      function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+      }
+
+
+
+    });
+  </script>
+</head>
+<body style="font-family: monospace;">
+  <div class="app">
+    <h1>Encrypt message</h1>
+    <div class="input">
+      <div>
+        <span>INPUT</span>
+      </div>
+      <div class="input_parameters">
+        <div class="input_parameter">
+          <div class="input_parameter_name">
+            <span>Public key</span>
+          </div>
+          <div class="input_parameter_value">
+            <textarea id="txtPublicKey" class="input_parameter_text"></textarea>
+          </div>
+        </div>
+        <div class="input_parameter">
+          <div class="input_parameter_name">
+            <span>Plain Text Message</span>
+          </div>
+          <div class="input_parameter_value">
+            <textarea id="txtMessage" class="input_parameter_text"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="input_button">
+        <button type="button" id="btnEncryptMessage">Encrypt Message</button>
+      </div>
+    </div>
+
+    <div class="output">
+      <div>
+        <span>OUTPUT</span>
+      </div>
+      <div class="output_key">
+        <div>
+          <span>Encrypted Message</span>
+        </div>
+        <div>
+          <textarea readonly id="txtEncryptedMessage" class="output_key_text"></textarea>
+        </div>
+        <div>
+          <button type="button" id="btnDownloadEncryptedMessage">Download</button>
+        </div>
+      </div>
+  </div>
+
+</div>
+
+</body>
+</html>

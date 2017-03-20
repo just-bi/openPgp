@@ -1,0 +1,65 @@
+body {
+    font-family: monospace;
+}
+
+.input {
+    width: 480px;
+    border: 1px dashed lightgrey;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+.input span {
+    font-weight: bold;
+}
+
+
+.input_parameters {
+    text-align: left;
+    margin-top: 10px;
+}
+
+.input_parameter {
+    display: block;
+    padding: 2px;
+}
+
+.input_parameter_name {
+    display: inline-block;
+    width: 135px;
+}
+
+.input_parameter_value {
+    display: inline-block;
+}
+
+.input_parameter_value input {
+    width: 300px;
+}
+
+
+.output {
+    width: 1050px;
+    border: 1px dashed lightgrey;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+.output span {
+    font-weight: bold;
+}
+
+.output_key {
+    display: inline-block;
+    padding: 20px;
+}
+
+.output_key_text {
+    width: 450px;
+    height: 300px;
+    resize: none;
+    font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+    font-size: 11px;
+}

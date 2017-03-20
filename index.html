@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="js/openpgp.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      // variables
+      var privkey, pubkey, encrypted;
+
+
+      // setup
+      openpgp.initWorker({path: 'js/openpgp.worker.js'});
+      openpgp.config.aead_protect = true;
+
+
+      // creation of the keys
+      openpgp.generateKey(
+              {
+                userIds: [{name: 'Jon Smith', email: 'jon@example.com'}], // multiple user IDs
+                numBits: 4096,                                            // RSA key size
+                passphrase: 'super long and hard to guess secret'         // protects the private key
+              }
+      ).then(
+              function (key) {
+                var privkey = key.privateKeyArmored; // '-----BEGIN PGP PRIVATE KEY BLOCK ... '
+                var pubkey = key.publicKeyArmored;   // '-----BEGIN PGP PUBLIC KEY BLOCK ... '
+
+                console.log(privkey);
+                console.log(pubkey);
+              }
+      );
+
+
+
+      //var pubkey = '-----BEGIN PGP PUBLIC KEY BLOCK ... END PGP PUBLIC KEY BLOCK-----';
+      //var privkey = '-----BEGIN PGP PRIVATE KEY BLOCK ... END PGP PRIVATE KEY BLOCK-----';
+
+//      openpgp.encrypt(
+//              {
+//                data: 'Hello, World!',                             // input as String (or Uint8Array)
+//                publicKeys: openpgp.key.readArmored(pubkey).keys,  // for encryption
+//                privateKeys: openpgp.key.readArmored(privkey).keys // for signing (optional)
+//              }
+//      ).then(function (ciphertext) {
+//        encrypted = ciphertext.data; // '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
+//      });
+//
+//      console.log(encrypted);
+
+
+
+    });
+  </script>
+</head>
+<body>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "openPgp",
+  "private": true,
+  "version": "0.0.1",
+  "dependencies": {
+    "openpgp": "~2.5.1"
+  }
+}
